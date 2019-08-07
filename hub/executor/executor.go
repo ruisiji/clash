@@ -46,6 +46,7 @@ func GetGeneral() *config.General {
 		RedirPort:      ports.RedirPort,
 		Authentication: authenticator,
 		AllowLan:       P.AllowLan(),
+		BindAddress:    P.BindAddress(),
 		Mode:           T.Instance().Mode(),
 		LogLevel:       log.Level(),
 	}
@@ -102,18 +103,15 @@ func updateGeneral(general *config.General) {
 	log.SetLevel(general.LogLevel)
 	T.Instance().SetMode(general.Mode)
 
-	allowLan := general.AllowLan
-	P.SetAllowLan(allowLan)
-
-	if err := P.ReCreateHTTP(general.Port); err != nil {
+	if err := P.ReCreateHTTP(general.BindAddress, general.Port, general.AllowLan); err != nil {
 		log.Errorln("Start HTTP server error: %s", err.Error())
 	}
 
-	if err := P.ReCreateSocks(general.SocksPort); err != nil {
+	if err := P.ReCreateSocks(general.BindAddress, general.SocksPort, general.AllowLan); err != nil {
 		log.Errorln("Start SOCKS5 server error: %s", err.Error())
 	}
 
-	if err := P.ReCreateRedir(general.RedirPort); err != nil {
+	if err := P.ReCreateRedir(general.BindAddress, general.RedirPort, general.AllowLan); err != nil {
 		log.Errorln("Start Redir server error: %s", err.Error())
 	}
 }

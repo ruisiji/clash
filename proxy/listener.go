@@ -11,8 +11,6 @@ import (
 )
 
 var (
-	allowLan = false
-
 	socksListener    *socks.SockListener
 	socksUDPListener *socks.SockUDPListener
 	httpListener     *http.HttpListener
@@ -30,16 +28,8 @@ type Ports struct {
 	RedirPort int `json:"redir-port"`
 }
 
-func AllowLan() bool {
-	return allowLan
-}
-
-func SetAllowLan(al bool) {
-	allowLan = al
-}
-
-func ReCreateHTTP(port int) error {
-	addr := genAddr(port, allowLan)
+func ReCreateHTTP(host string, port int, allowLan bool) error {
+	addr := genAddr(host, port, allowLan)
 
 	if httpListener != nil {
 		if httpListener.Address() == addr {
@@ -62,8 +52,8 @@ func ReCreateHTTP(port int) error {
 	return nil
 }
 
-func ReCreateSocks(port int) error {
-	addr := genAddr(port, allowLan)
+func ReCreateSocks(host string, port int, allowLan bool) error {
+	addr := genAddr(host, port, allowLan)
 
 	if socksListener != nil {
 		if socksListener.Address() == addr {
@@ -83,22 +73,16 @@ func ReCreateSocks(port int) error {
 		return err
 	}
 
-	return reCreateSocksUDP(port)
+	return reCreateSocksUDP(addr)
 }
 
-func reCreateSocksUDP(port int) error {
-	addr := genAddr(port, allowLan)
-
+func reCreateSocksUDP(addr string) error {
 	if socksUDPListener != nil {
 		if socksUDPListener.Address() == addr {
 			return nil
 		}
 		socksUDPListener.Close()
 		socksUDPListener = nil
-	}
-
-	if portIsZero(addr) {
-		return nil
 	}
 
 	var err error
@@ -110,8 +94,8 @@ func reCreateSocksUDP(port int) error {
 	return nil
 }
 
-func ReCreateRedir(port int) error {
-	addr := genAddr(port, allowLan)
+func ReCreateRedir(host string, port int, allowLan bool) error {
+	addr := genAddr(host, port, allowLan)
 
 	if redirListener != nil {
 		if redirListener.Address() == addr {
@@ -159,6 +143,27 @@ func GetPorts() *Ports {
 	return ports
 }
 
+func GetBindAddress() string {
+	var host string
+
+	if httpListener != nil {
+		host, _, _ := net.SplitHostPort(httpListener.Address())
+		return host
+	}
+
+	if socksListener != nil {
+		host, _, _ := net.SplitHostPort(socksListener.Address())
+		return host
+	}
+
+	if redirListener != nil {
+		host, _, _ := net.SplitHostPort(redirListener.Address())
+		return host
+	}
+
+	return host
+}
+
 func portIsZero(addr string) bool {
 	_, port, err := net.SplitHostPort(addr)
 	if port == "0" || port == "" || err != nil {
@@ -167,9 +172,14 @@ func portIsZero(addr string) bool {
 	return false
 }
 
-func genAddr(port int, allowLan bool) string {
+func genAddr(host string, port int, allowLan bool) string {
 	if allowLan {
-		return fmt.Sprintf(":%d", port)
+		if host == "all" {
+			return fmt.Sprintf(":%d", port)
+		} else {
+			return fmt.Sprintf("%s:%d", host, port)
+		}
 	}
+
 	return fmt.Sprintf("127.0.0.1:%d", port)
 }
