@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Dreamacro/clash/config"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/log"
 	T "github.com/Dreamacro/clash/tunnel"
@@ -35,7 +36,12 @@ func SetUIPath(path string) {
 	uiPath = path
 }
 
-func Start(addr string, secret string) {
+func Start(general *config.General) {
+	addr := general.ExternalController
+	secret := general.Secret
+	tlsCertFile := general.TLSCertFile
+	tlsPrivateKeyFile := general.TLSPrivateKeyFile
+
 	if serverAddr != "" {
 		return
 	}
@@ -75,9 +81,16 @@ func Start(addr string, secret string) {
 	}
 
 	log.Infoln("RESTful API listening at: %s", addr)
-	err := http.ListenAndServe(addr, r)
-	if err != nil {
-		log.Errorln("External controller error: %s", err.Error())
+	if tlsCertFile != "" && tlsPrivateKeyFile != "" {
+		err := http.ListenAndServeTLS(addr, tlsCertFile, tlsPrivateKeyFile, r)
+		if err != nil {
+			log.Errorln("External controller error: %s", err.Error())
+		}
+	} else {
+		err := http.ListenAndServe(addr, r)
+		if err != nil {
+			log.Errorln("External controller error: %s", err.Error())
+		}
 	}
 }
 

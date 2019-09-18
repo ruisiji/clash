@@ -34,6 +34,8 @@ type General struct {
 	Mode               T.Mode       `json:"mode"`
 	LogLevel           log.LogLevel `json:"log-level"`
 	ExternalController string       `json:"-"`
+	TLSCertFile        string       `json:"-"`
+	TLSPrivateKeyFile  string       `json:"-"`
 	ExternalUI         string       `json:"-"`
 	Secret             string       `json:"-"`
 }
@@ -98,6 +100,8 @@ type rawConfig struct {
 	Mode               T.Mode       `yaml:"mode"`
 	LogLevel           log.LogLevel `yaml:"log-level"`
 	ExternalController string       `yaml:"external-controller"`
+	TLSCertFile        string       `yaml:"tls-cert-file"`
+	TLSPrivateKeyFile  string       `yaml:"tls-private-key-file"`
 	ExternalUI         string       `yaml:"external-ui"`
 	Secret             string       `yaml:"secret"`
 
@@ -220,6 +224,8 @@ func parseGeneral(cfg *rawConfig) (*General, error) {
 	allowLan := cfg.AllowLan
 	bindAddress := cfg.BindAddress
 	externalController := cfg.ExternalController
+	tlsCertFile := cfg.TLSCertFile
+	tlsPrivateKeyFile := cfg.TLSPrivateKeyFile
 	externalUI := cfg.ExternalUI
 	secret := cfg.Secret
 	mode := cfg.Mode
@@ -244,6 +250,8 @@ func parseGeneral(cfg *rawConfig) (*General, error) {
 		Mode:               mode,
 		LogLevel:           logLevel,
 		ExternalController: externalController,
+		TLSCertFile:        tlsCertFile,
+		TLSPrivateKeyFile:  tlsPrivateKeyFile,
 		ExternalUI:         externalUI,
 		Secret:             secret,
 	}

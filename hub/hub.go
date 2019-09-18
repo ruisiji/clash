@@ -17,7 +17,7 @@ func Parse() error {
 	}
 
 	if cfg.General.ExternalController != "" {
-		go route.Start(cfg.General.ExternalController, cfg.General.Secret)
+		go route.Start(cfg.General)
 	}
 
 	executor.ApplyConfig(cfg, true)
